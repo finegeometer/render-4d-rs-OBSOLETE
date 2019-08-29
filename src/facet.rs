@@ -10,12 +10,7 @@ pub struct Facet {
 impl Facet {
     fn to_screen_depth_space(&self, p: na::Matrix5<f64>) -> Option<Vec<na::RowVector5<f64>>> {
         let m0: na::Matrix5x4<f64> /* Facet -> Screen w/ Depth */ = p * self.embedding;
-        let m1: na::Matrix4x5<f64> /* Screen w/ Depth -> Screen */ =
-            na::Matrix4x5::new(
-                1., 0., 0., 0., 0.,
-                0., 1., 0., 0., 0.,
-                0., 0., 1., 0., 0.,
-                0., 0., 0., 0., 1.);
+        let m1: na::Matrix4x5<f64> /* Screen w/ Depth -> Screen */ = matrix_forget_depth();
         let m2: na::Matrix4<f64> /* Facet -> Screen */ = m1 * m0;
         let m3: na::Matrix4<f64> /* Screen -> Facet */ = m2.try_inverse()?;
         let m4: na::Matrix4x5<f64> /* Screen w/ Depth -> Facet */ = m3 * m1;
@@ -49,15 +44,7 @@ impl Facet {
                             )
                         }),
                 )
-                .transform(
-                    na::Matrix4x5::new(
-                        1., 0., 0., 0., 0., //
-                        0., 1., 0., 0., 0., //
-                        0., 0., 1., 0., 0., //
-                        0., 0., 0., 0., 1., //
-                    ) * p
-                        * f1.embedding,
-                )
+                .transform(matrix_forget_depth() * p * f1.embedding)
             })
         })
     }
@@ -127,4 +114,13 @@ impl Facet {
             ],
         }
     }
+}
+
+fn matrix_forget_depth() -> na::Matrix4x5<f64> {
+    na::Matrix4x5::new(
+        1., 0., 0., 0., 0., //
+        0., 1., 0., 0., 0., //
+        0., 0., 1., 0., 0., //
+        0., 0., 0., 0., 1.,
+    )
 }
