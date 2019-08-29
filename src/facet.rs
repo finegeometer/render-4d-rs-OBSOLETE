@@ -12,11 +12,10 @@ impl Facet {
         let m0: na::Matrix5x4<f64> /* Facet -> Screen w/ Depth */ = p * self.embedding;
         let m1: na::Matrix4x5<f64> /* Screen w/ Depth -> Screen */ =
             na::Matrix4x5::new(
-                1., 0., 0., 0.,
-                0., 1., 0., 0.,
-                0., 0., 1., 0.,
-                0., 0., 0., 0.,
-                0., 0., 0., 1.);
+                1., 0., 0., 0., 0.,
+                0., 1., 0., 0., 0.,
+                0., 0., 1., 0., 0.,
+                0., 0., 0., 0., 1.);
         let m2: na::Matrix4<f64> /* Facet -> Screen */ = m1 * m0;
         let m3: na::Matrix4<f64> /* Screen -> Facet */ = m2.try_inverse()?;
         let m4: na::Matrix4x5<f64> /* Screen w/ Depth -> Facet */ = m3 * m1;
@@ -49,6 +48,15 @@ impl Facet {
                                     .map(|h| h * p * f1.embedding),
                             )
                         }),
+                )
+                .transform(
+                    na::Matrix4x5::new(
+                        1., 0., 0., 0., 0., //
+                        0., 1., 0., 0., 0., //
+                        0., 0., 1., 0., 0., //
+                        0., 0., 0., 0., 1., //
+                    ) * p
+                        * f1.embedding,
                 )
             })
         })

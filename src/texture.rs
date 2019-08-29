@@ -37,9 +37,7 @@ impl Texture {
                     .into_iter()
             })
     }
-}
 
-impl Texture {
     pub fn subtract_regions(
         &self,
         regions: impl IntoIterator<Item = impl IntoIterator<Item = na::RowVector4<f64>>>,
@@ -52,6 +50,13 @@ impl Texture {
                     .filter_map(|r| region_to_polygon(r, self.embedding))
                     .collect::<Vec<_>>(),
             ),
+        }
+    }
+
+    pub fn transform(self, m: na::Matrix4<f64>) -> Self {
+        Self {
+            embedding: m * self.embedding,
+            poly: self.poly,
         }
     }
 }
