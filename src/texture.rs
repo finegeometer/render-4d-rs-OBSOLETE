@@ -53,11 +53,9 @@ impl Texture {
         }
     }
 
-    pub fn transform(self, m: na::Matrix4<f64>) -> Self {
-        Self {
-            embedding: m * self.embedding,
-            poly: self.poly,
-        }
+    pub fn transform(mut self, mat: na::Matrix4<f64>) -> Self {
+        self.embedding = mat * self.embedding;
+        self
     }
 }
 
