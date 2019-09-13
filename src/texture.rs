@@ -1,13 +1,13 @@
 use nalgebra as na;
 use std::convert::TryInto;
 
-pub(crate) struct Texture {
-    embedding: na::Matrix4x3<f64>,
-    poly: polygon3::Polygon,
+pub struct Texture {
+    pub embedding: na::Matrix4x3<f64>,
+    pub poly: polygon3::Polygon,
 }
 
 impl Texture {
-    pub fn get_triangles(self) -> impl Iterator<Item = crate::triangle::Triangle> {
+    pub(crate) fn get_triangles(self) -> impl Iterator<Item = crate::triangle::Triangle> {
         let embedding: na::Matrix4x3<f64> = self.embedding;
         self.poly
             .vertices()
@@ -38,7 +38,7 @@ impl Texture {
             })
     }
 
-    pub fn subtract_regions(
+    pub(crate) fn subtract_regions(
         &self,
         regions: impl IntoIterator<Item = impl IntoIterator<Item = na::RowVector4<f64>>>,
     ) -> Self {
@@ -53,7 +53,7 @@ impl Texture {
         }
     }
 
-    pub fn transform(mut self, mat: na::Matrix4<f64>) -> Self {
+    pub(crate) fn transform(mut self, mat: na::Matrix4<f64>) -> Self {
         self.embedding = mat * self.embedding;
         self
     }
@@ -66,19 +66,19 @@ fn region_to_polygon(
     let boundaries = region
         .into_iter()
         .filter_map(|h| polygon3::Line::try_from_f64_array((h * embedding).into()))
-        .chain(square());
+        .chain(giant_square());
 
     let convex_polygon = polygon3::ConvexPolygon::from_boundaries(boundaries)?;
 
     Some(convex_polygon.try_into().unwrap())
 }
 
-fn square() -> Vec<polygon3::Line> {
+fn giant_square() -> Vec<polygon3::Line> {
     vec![
-        [1, 0, 0].try_into().unwrap(),
-        [0, 1, 0].try_into().unwrap(),
-        [-1, 0, 1].try_into().unwrap(),
-        [0, -1, 1].try_into().unwrap(),
+        [1, 0, 1000].try_into().unwrap(),
+        [0, 1, 1000].try_into().unwrap(),
+        [-1, 0, 1000].try_into().unwrap(),
+        [0, -1, 1000].try_into().unwrap(),
     ]
 }
 
@@ -98,33 +98,4 @@ fn area(p: &[polygon3::Point]) -> f64 {
         out += x1 * y2 - y1 * x2;
     }
     out
-}
-
-impl Texture {
-    pub fn new_square(
-        [a1, a2, a3]: [f64; 3],
-        [b1, b2, b3]: [f64; 3],
-        [c1, c2, c3]: [f64; 3],
-    ) -> Self {
-        Texture {
-            embedding: na::Matrix4x3::new(
-                b1 - a1,
-                c1 - a1,
-                a1,
-                b2 - a2,
-                c2 - a2,
-                a2,
-                b3 - a3,
-                c3 - a3,
-                a3,
-                0.,
-                0.,
-                1.,
-            ),
-            poly: polygon3::ConvexPolygon::from_boundaries(square())
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        }
-    }
 }
